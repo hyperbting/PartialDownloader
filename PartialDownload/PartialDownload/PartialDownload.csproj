@@ -41,6 +41,7 @@
   <ItemGroup>
     <Compile Include="Library\FileIOHelper.cs" />
     <Compile Include="Library\WebRequestHelper.cs" />
+    <Compile Include="PartialDownloadManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
