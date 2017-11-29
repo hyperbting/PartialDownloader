@@ -21,7 +21,7 @@ namespace PartialDownload
         public bool PartialDownloadCheck(string _url, string _localPath)
         {
             //check local file exist
-            long localFileSize = myFileIOHelper.CheckFileSize(_localPath);
+            int localFileSize = myFileIOHelper.CheckFileSize(_localPath);
             if (localFileSize < 0)
             {
                 //file not exist
@@ -35,7 +35,7 @@ namespace PartialDownload
                 return false;
             }
 
-            long targetLen = myWebRequestHelper.CheckFileSize(_url);
+            int targetLen = myWebRequestHelper.CheckFileSize(_url);
 
             if (targetLen < 0)
             {
@@ -60,9 +60,45 @@ namespace PartialDownload
 
         public void Download()
         {
-            System.IO.Stream stream = myWebRequestHelper.DownloadParts("https://s3-ap-northeast-1.amazonaws.com/hooloop360travelmap/hooloop360travelmap/Android/Android", 0);
-            //myFileIOHelper.AppendTo(@"c:\123.546", );
+            string url = "https://s3-ap-northeast-1.amazonaws.com/hooloop360travelmap/hooloop360travelmap/Video/taidong/taidong_%E5%8E%9F%E5%A7%8B%E9%83%A8%E8%90%BD%E5%B1%B1%E5%9C%B0%E7%BE%8E%E9%A3%9F.mp4";
+            string localPath = @"d:\123.mp4";
 
+            int windowSize = 65536;
+
+            int rfsize = myWebRequestHelper.CheckFileSize(url);
+            int lfsize = myFileIOHelper.CheckFileSize(localPath);
+
+            Console.WriteLine(rfsize);
+            Console.WriteLine(lfsize);
+            for (int i = lfsize + 1; i < rfsize; i += windowSize)
+            {
+                System.IO.Stream stream = myWebRequestHelper.DownloadParts( url, i, windowSize);
+
+                byte[] byteData = myFileIOHelper.ReadFully(stream);
+                //myFileIOHelper.AppendTo("d:/123", myFileIOHelper.ReadFully(stream));
+
+                myFileIOHelper.AppendTo(localPath, byteData);
+            }
+        }
+
+        public void Download2()
+        {
+            string url = "https://s3-ap-northeast-1.amazonaws.com/hooloop360travelmap/hooloop360travelmap/Video/taidong/taidong_%E5%8E%9F%E5%A7%8B%E9%83%A8%E8%90%BD%E5%B1%B1%E5%9C%B0%E7%BE%8E%E9%A3%9F.mp4";
+            string localPath = @"d:\123_2.mp4";
+
+            int rfsize = myWebRequestHelper.CheckFileSize(url);
+            int lfsize = myFileIOHelper.CheckFileSize(localPath);
+
+            Console.WriteLine(rfsize);
+            Console.WriteLine(lfsize);
+            for (int i = lfsize + 1; i < rfsize; i += rfsize)
+            {
+                System.IO.Stream stream = myWebRequestHelper.DownloadParts(url, i, rfsize);
+
+                byte[] byteData = myFileIOHelper.ReadFully(stream);
+
+                myFileIOHelper.AppendTo(localPath, byteData);
+            }
         }
     }
 }

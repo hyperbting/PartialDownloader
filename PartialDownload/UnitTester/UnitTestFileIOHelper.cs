@@ -30,6 +30,9 @@ namespace UnitTester
                 Console.Write(bytt);
 
             fileIOHelper.AppendTo(@"d:\123.546" , bytess);
+
+
+
         }
     }
 }

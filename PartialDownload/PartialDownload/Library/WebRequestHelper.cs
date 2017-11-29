@@ -50,9 +50,9 @@ namespace PartialDownload.Library
             return false;
         }
 
-        public long CheckFileSize(string _url)
+        public int CheckFileSize(string _url)
         {
-            long ContentLength = -1;
+            int ContentLength = -1;
             HttpWebResponse resp = null;
 
             try
@@ -62,7 +62,7 @@ namespace PartialDownload.Library
 
                 resp = req.GetResponse() as HttpWebResponse;
 
-                if (long.TryParse(resp.Headers.Get("Content-Length"), out ContentLength))
+                if (Int32.TryParse(resp.Headers.Get("Content-Length"), out ContentLength))
                 {
                     //Do something useful with ContentLength here 
                     return ContentLength;
@@ -73,7 +73,7 @@ namespace PartialDownload.Library
                 if (e.Status == WebExceptionStatus.ProtocolError)
                 {
                     resp = (HttpWebResponse)e.Response;
-                    return -(long)resp.StatusCode;//Console.Write("Errorcode: {0}", (int)resp.StatusCode);
+                    return -(int)resp.StatusCode;//Console.Write("Errorcode: {0}", (int)resp.StatusCode);
                 }
                 else
                 {
@@ -90,26 +90,14 @@ namespace PartialDownload.Library
             return -1;
         }
 
-        public Stream DownloadParts(string _url, int _start)
+        public Stream DownloadParts(string _url, int _start, int _windowSize = 1024)
         {
             HttpWebRequest myHttpWebRequest = (HttpWebRequest)WebRequest.Create(_url);
-            myHttpWebRequest.AddRange(_start, _start + 1023);
+            myHttpWebRequest.AddRange(_start, _start + _windowSize - 1);
 
             HttpWebResponse myHttpWebResponse = (HttpWebResponse)myHttpWebRequest.GetResponse();
 
             return myHttpWebResponse.GetResponseStream();
         }
-
-        //public byte[] DownloadPartsBytes(string _url, int _start)
-        //{
-        //    System.IO.Stream stream = DownloadParts(_url, _start);
-
-        //    using (MemoryStream ms = new MemoryStream())
-        //    {
-        //        //stream.CopyTo(ms);
-
-        //        return ms.ToArray();
-        //    }
-        //}
     }
 }
