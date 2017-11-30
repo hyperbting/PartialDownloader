@@ -31,18 +31,5 @@ namespace UnitTester
             bool fsize2 = wrh.CheckServerSupportPartialContent("https://s3-ap-northeast-1.amazonaws.com/hooloop360travelmap/hooloop360travelmap/Android/Android");
             Console.WriteLine(fsize2);
         }
-
-        [TestMethod]
-        public void TestMethodDownloadParts()
-        {
-            WebRequestHelper wrh = new WebRequestHelper();
-            System.IO.Stream stream = wrh.DownloadParts("https://s3-ap-northeast-1.amazonaws.com/hooloop360travelmap/hooloop360travelmap/Android/Android", 0);
-
-            using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
-            {
-                stream.CopyTo(ms);
-                Console.WriteLine(ms.ToArray().Length);
-            }            
-        }
     }
 }

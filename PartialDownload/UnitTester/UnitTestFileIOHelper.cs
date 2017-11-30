@@ -14,8 +14,10 @@ namespace UnitTester
 
             string url = "C:\\Users/User/.bash_history";
             Console.WriteLine(fileIOHelper.CheckFileSize(url));//exist
+
             url = @"C:\Users\User\.bash_history";
             Console.WriteLine(fileIOHelper.CheckFileSize(url));//exist
+
             url = @"c:\123.546";
             Console.WriteLine(fileIOHelper.CheckFileSize(url));//File not exist
         }
@@ -26,13 +28,12 @@ namespace UnitTester
             FileIOHelper fileIOHelper = new FileIOHelper();
             byte[] bytess = new byte[] { 1,2,3,4,5,6,7};
 
-            foreach (var bytt in bytess)
-                Console.Write(bytt);
-
             fileIOHelper.AppendTo(@"d:\123.546" , bytess);
+            Console.WriteLine("Append to d:\\123.546");
 
-
-
+            System.IO.Stream st = new System.IO.MemoryStream(new byte[] { 5, 4, 3, 2, 1 });
+            fileIOHelper.AppendTo(@"d:\123.546", st);
+            Console.WriteLine("Append to d:\\123.546");
         }
     }
 }

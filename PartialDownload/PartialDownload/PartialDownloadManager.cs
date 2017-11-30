@@ -1,23 +1,32 @@
 ﻿using PartialDownload.Library;
+using PartialDownload.LibraryUnity;
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Collections;
+using System.IO;
+using UnityEngine;
 
 namespace PartialDownload
 {
-    public class PartialDownloadManager
+    public class PartialDownloadManager: MonoBehaviour
     {
+        private UnityWebRequestHelper myUnityWebRequestHelper;
         private WebRequestHelper myWebRequestHelper;
         private FileIOHelper myFileIOHelper;
 
-        public PartialDownloadManager()
+        protected void Start()
         {
             myWebRequestHelper = new WebRequestHelper();
             myFileIOHelper = new FileIOHelper();
+            myUnityWebRequestHelper = new UnityWebRequestHelper();
         }
 
+        /// <summary>
+        /// Checker
+        /// </summary>
+        /// <param name="_url"></param>
+        /// <param name="_localPath"></param>
+        /// <returns></returns>
         public bool PartialDownloadCheck(string _url, string _localPath)
         {
             //check local file exist
@@ -25,28 +34,26 @@ namespace PartialDownload
             if (localFileSize < 0)
             {
                 //file not exist
-                return false;
+                return true;
             }
 
             //check remote file size
             if (myWebRequestHelper.CheckServerSupportPartialContent(_url))
             {
                 //not support partial download
-                return false;
+                return true;
             }
 
             int targetLen = myWebRequestHelper.CheckFileSize(_url);
-
-            if (targetLen < 0)
-            {
-                //file not exist
-                return false;
+            if (targetLen <= 0)
+            {                
+                return false; //remote file not exist
             }
 
-            if(localFileSize > targetLen)
+            if(localFileSize != targetLen)
             {
                 //file must changed
-                return false;
+                return true;
             }
 
             if (localFileSize == targetLen)
@@ -54,51 +61,34 @@ namespace PartialDownload
                 //file Matched?! job done here
                 return false;
             }
-
             return true;
         }
 
-        public void Download()
+        public IEnumerator DownloadWholeFile(Action<Stream> _resultStreamAct, string _remoteURL, string _localPath, int _windowSize = 1048576)
         {
-            string url = "https://s3-ap-northeast-1.amazonaws.com/hooloop360travelmap/hooloop360travelmap/Video/taidong/taidong_%E5%8E%9F%E5%A7%8B%E9%83%A8%E8%90%BD%E5%B1%B1%E5%9C%B0%E7%BE%8E%E9%A3%9F.mp4";
-            string localPath = @"d:\123.mp4";
+            bool locker;
+            int rfsize = myWebRequestHelper.CheckFileSize(_remoteURL);
+            int lfsize = myFileIOHelper.CheckFileSize(_localPath);
 
-            int windowSize = 65536;
+            Debug.Log("remote file size " + rfsize);
+            Debug.Log("local file size " + lfsize);
 
-            int rfsize = myWebRequestHelper.CheckFileSize(url);
-            int lfsize = myFileIOHelper.CheckFileSize(localPath);
-
-            Console.WriteLine(rfsize);
-            Console.WriteLine(lfsize);
-            for (int i = lfsize + 1; i < rfsize; i += windowSize)
+            for (int i = lfsize + 1; i < rfsize; i += _windowSize)
             {
-                System.IO.Stream stream = myWebRequestHelper.DownloadParts( url, i, windowSize);
+                locker = true;
+                Coroutine cr = StartCoroutine(
+                    myUnityWebRequestHelper.DownloadParts(
+                        (Stream _st) => {
+                            myFileIOHelper.AppendTo(_localPath, _st);
+                            locker = false;
+                            Debug.Log(i + " finished");
+                        }, _remoteURL, i, _windowSize)
+                );
 
-                byte[] byteData = myFileIOHelper.ReadFully(stream);
-                //myFileIOHelper.AppendTo("d:/123", myFileIOHelper.ReadFully(stream));
-
-                myFileIOHelper.AppendTo(localPath, byteData);
+                while(locker)
+                    yield return null;
             }
-        }
 
-        public void Download2()
-        {
-            string url = "https://s3-ap-northeast-1.amazonaws.com/hooloop360travelmap/hooloop360travelmap/Video/taidong/taidong_%E5%8E%9F%E5%A7%8B%E9%83%A8%E8%90%BD%E5%B1%B1%E5%9C%B0%E7%BE%8E%E9%A3%9F.mp4";
-            string localPath = @"d:\123_2.mp4";
-
-            int rfsize = myWebRequestHelper.CheckFileSize(url);
-            int lfsize = myFileIOHelper.CheckFileSize(localPath);
-
-            Console.WriteLine(rfsize);
-            Console.WriteLine(lfsize);
-            for (int i = lfsize + 1; i < rfsize; i += rfsize)
-            {
-                System.IO.Stream stream = myWebRequestHelper.DownloadParts(url, i, rfsize);
-
-                byte[] byteData = myFileIOHelper.ReadFully(stream);
-
-                myFileIOHelper.AppendTo(localPath, byteData);
-            }
         }
     }
 }

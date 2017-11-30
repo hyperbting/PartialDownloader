@@ -22,35 +22,29 @@ namespace PartialDownload.Library
                 return -1;
         }
 
+        public void AppendTo(string _path, Stream _sdata, int _windowsSize = 1048576)
+        {
+            byte[] buffer = new byte[_windowsSize];
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                int bytesRead;
+                while ((bytesRead = _sdata.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    ms.Write(buffer, 0, bytesRead);
+                }
+
+                byte[] result = ms.ToArray();
+                AppendTo(_path, result);
+            }
+        }
+
         public void AppendTo(string _path, byte[] _data)
         {
             using (var fstream = new FileStream(_path, FileMode.Append))
             {
-                //using (var bw = new BinaryWriter(fstream))
-                //{
-                //    bw.Write(_data);
-                //}
                 fstream.Write(_data, 0, _data.Length);
             }
-        }
-
-        public byte[] ReadFully(Stream input)
-        {
-            byte[] buffer = new byte[65536];//new byte[16 * 1024];
-            using (MemoryStream ms = new MemoryStream())
-            {
-                int bytesRead;
-                while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                        ms.Write(buffer, 0, bytesRead);
-                }
-                return ms.ToArray();
-
-                //      input.CopyTo(ms);
-                //      return ms.ToArray();
-            }
-
-            //return ((MemoryStream)input).ToArray();
         }
     }
 }
