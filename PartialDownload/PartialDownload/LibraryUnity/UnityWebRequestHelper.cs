@@ -1,14 +1,18 @@
 ﻿using PartialDownload.Library;
+
 using System;
 using System.Collections;
 using System.IO;
 using System.Net;
+
 using UnityEngine.Networking;
 
 namespace PartialDownload.LibraryUnity
 {
     public class UnityWebRequestHelper
     {
+        private bool atWork = false;
+
         public SSLSupporter ssls = new SSLSupporter();
 
         /// <summary>
@@ -67,5 +71,24 @@ namespace PartialDownload.LibraryUnity
                 yield return null;
             }
         }
+
+        #region Utility
+        public IEnumerator CheckInternetConnection(Action<bool> _act, string _url)
+        {
+            if (atWork)
+                yield return null;
+
+            atWork = true;
+            using (UnityWebRequest www = UnityWebRequest.Get(_url))
+            {
+                yield return www.Send();
+
+                if (www.isNetworkError)
+                    _act(false);
+                _act(true);
+            }
+            atWork = false;
+        }
+        #endregion
     }
 }

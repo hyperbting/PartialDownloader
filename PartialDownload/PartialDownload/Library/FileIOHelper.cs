@@ -46,5 +46,26 @@ namespace PartialDownload.Library
                 fstream.Write(_data, 0, _data.Length);
             }
         }
+
+        public void Remove(string _path)
+        {
+            if (!CheckFileExist(_path))
+                return;
+
+            File.Delete(_path);
+        }
+
+        public void Touch(string _path)
+        {
+            if (!CheckFileExist(_path))
+            {
+                using (File.Create(_path))
+                {
+                }
+                return;
+            }
+
+            File.SetLastWriteTimeUtc(_path, DateTime.UtcNow);
+        }
     }
 }

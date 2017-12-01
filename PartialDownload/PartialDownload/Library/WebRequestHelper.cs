@@ -6,9 +6,28 @@ namespace PartialDownload.Library
 {
     public class WebRequestHelper
     {
-        public SSLSupporter ssls = new SSLSupporter();
+        public static SSLSupporter ssls = new SSLSupporter();
 
-        public bool CheckServerSupportPartialContent(string _url)
+        public static bool CheckForInternetConnection( string _path)
+        {
+            ServicePointManager.ServerCertificateValidationCallback = ssls.MyRemoteCertificateValidationCallback;
+            try
+            {
+                using (var client = new WebClient())
+                {
+                    using (client.OpenRead(_path))
+                    {
+                        return true;
+                    }
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static bool CheckServerSupportPartialContent(string _url)
         {
             ServicePointManager.ServerCertificateValidationCallback = ssls.MyRemoteCertificateValidationCallback;
             string ContentRanges = "";
