@@ -2,7 +2,7 @@
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 
-namespace PartialDownload.Library
+namespace PartialDownloadManager.Library
 {
     public class SSLSupporter
     {

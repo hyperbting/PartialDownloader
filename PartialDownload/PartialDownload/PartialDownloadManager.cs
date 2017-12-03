@@ -1,5 +1,5 @@
-﻿using PartialDownload.Library;
-using PartialDownload.LibraryUnity;
+﻿using PartialDownloadManager.Library;
+using PartialDownloadManager.LibraryUnity;
 
 using System;
 using System.Collections;
@@ -8,7 +8,7 @@ using System.IO;
 
 using UnityEngine;
 
-namespace PartialDownload
+namespace PartialDownloadManager
 {
     public class PartialDownloadManager: MonoBehaviour
     {
@@ -35,6 +35,7 @@ namespace PartialDownload
         private UnityWebRequestHelper myUnityWebRequestHelper;
         private WebRequestHelper myWebRequestHelper;
         private FileIOHelper myFileIOHelper;
+        //private SSLSupporter ssls;
 
         public static PartialDownloadManager instance;
 
@@ -61,9 +62,10 @@ namespace PartialDownload
             myWebRequestHelper = new WebRequestHelper();
             myFileIOHelper = new FileIOHelper();
             myUnityWebRequestHelper = new UnityWebRequestHelper();
+            //ssls = new SSLSupporter();
 
             //first check networking as soon as possibile
-            if(checkAtStart)
+            if (checkAtStart)
                 CheckInternetConnection(true);
         }
 
@@ -72,10 +74,11 @@ namespace PartialDownload
             _remoteFileSize = myWebRequestHelper.CheckFileSize(_url);
             _localFileSize = myFileIOHelper.CheckFileSize(_localPath);
 
-            //check remote file size
+            //check remote server support
             if (WebRequestHelper.CheckServerSupportPartialContent(_url))
             {
                 //not support partial download
+                Debug.Log("Remote Server Not Support Partial Download");
                 return DownloadProcess.RedownloadFromBeginning;
             }
 
@@ -86,6 +89,7 @@ namespace PartialDownload
         {
             if (remoteFileSize <= 0)//remote file not exist
             {
+                Debug.Log("Remote File Not Found");
                 return DownloadProcess.DoNothing; 
             }
 
@@ -104,6 +108,7 @@ namespace PartialDownload
             }
             else//file size Matched?! job done here
             {
+                Debug.Log("File Size Matched");
                 return DownloadProcess.DoNothing;
             }
         }

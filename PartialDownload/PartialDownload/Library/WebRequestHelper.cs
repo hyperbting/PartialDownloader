@@ -2,15 +2,15 @@
 using System.IO;
 using System.Net;
 
-namespace PartialDownload.Library
+namespace PartialDownloadManager.Library
 {
     public class WebRequestHelper
     {
-        public static SSLSupporter ssls = new SSLSupporter();
+        //public static SSLSupporter ssls = new SSLSupporter();
 
         public static bool CheckForInternetConnection( string _path)
         {
-            ServicePointManager.ServerCertificateValidationCallback = ssls.MyRemoteCertificateValidationCallback;
+            //ServicePointManager.ServerCertificateValidationCallback = ssls.MyRemoteCertificateValidationCallback;
             try
             {
                 using (var client = new WebClient())
@@ -29,7 +29,7 @@ namespace PartialDownload.Library
 
         public static bool CheckServerSupportPartialContent(string _url)
         {
-            ServicePointManager.ServerCertificateValidationCallback = ssls.MyRemoteCertificateValidationCallback;
+            //ServicePointManager.ServerCertificateValidationCallback = ssls.MyRemoteCertificateValidationCallback;
             string ContentRanges = "";
             HttpWebResponse resp = null;
 
@@ -74,7 +74,7 @@ namespace PartialDownload.Library
         {
             int ContentLength = -1;
             HttpWebResponse resp = null;
-            ServicePointManager.ServerCertificateValidationCallback = ssls.MyRemoteCertificateValidationCallback;
+            //ServicePointManager.ServerCertificateValidationCallback = ssls.MyRemoteCertificateValidationCallback;
 
             try
             {
@@ -114,7 +114,7 @@ namespace PartialDownload.Library
         [System.Obsolete("Non-Async will hurt performance, use Async instead")]
         public Stream DownloadParts(string _url, int _start, int _windowSize = 1024)
         {
-            ServicePointManager.ServerCertificateValidationCallback = ssls.MyRemoteCertificateValidationCallback;
+            //ServicePointManager.ServerCertificateValidationCallback = ssls.MyRemoteCertificateValidationCallback;
             HttpWebRequest myHttpWebRequest = (HttpWebRequest)WebRequest.Create(_url);
             myHttpWebRequest.AddRange(_start, _start + _windowSize - 1);
 

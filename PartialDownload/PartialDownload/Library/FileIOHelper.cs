@@ -3,18 +3,18 @@ using System.Collections.Generic;
 
 using System.IO;
 
-namespace PartialDownload.Library
+namespace PartialDownloadManager.Library
 {
     public class FileIOHelper
     {
-        public bool CheckFileExist(string _path)
+        public bool CheckFileExist(string _localPath)
         {
-            return File.Exists(_path);
+            return File.Exists(_localPath);
         }
 
-        public int CheckFileSize(string _path)
+        public int CheckFileSize(string _localPath)
         {
-            FileInfo finfo = new FileInfo(_path);
+            FileInfo finfo = new FileInfo(_localPath);
 
             if (finfo.Exists)
                 return (int)finfo.Length;
@@ -22,7 +22,7 @@ namespace PartialDownload.Library
                 return -1;
         }
 
-        public void AppendTo(string _path, Stream _sdata, int _windowsSize = 1048576)
+        public void AppendTo(string _localPath, Stream _sdata, int _windowsSize = 1048576)
         {
             byte[] buffer = new byte[_windowsSize];
 
@@ -35,37 +35,37 @@ namespace PartialDownload.Library
                 }
 
                 byte[] result = ms.ToArray();
-                AppendTo(_path, result);
+                AppendTo(_localPath, result);
             }
         }
 
-        public void AppendTo(string _path, byte[] _data)
+        public void AppendTo(string _localPath, byte[] _data)
         {
-            using (var fstream = new FileStream(_path, FileMode.Append))
+            using (var fstream = new FileStream(_localPath, FileMode.Append))
             {
                 fstream.Write(_data, 0, _data.Length);
             }
         }
 
-        public void Remove(string _path)
+        public void Remove(string _localPath)
         {
-            if (!CheckFileExist(_path))
+            if (!CheckFileExist(_localPath))
                 return;
 
-            File.Delete(_path);
+            File.Delete(_localPath);
         }
 
-        public void Touch(string _path)
+        public void Touch(string _localPath)
         {
-            if (!CheckFileExist(_path))
+            if (!CheckFileExist(_localPath))
             {
-                using (File.Create(_path))
+                using (File.Create(_localPath))
                 {
                 }
                 return;
             }
 
-            File.SetLastWriteTimeUtc(_path, DateTime.UtcNow);
+            File.SetLastWriteTimeUtc(_localPath, DateTime.UtcNow);
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using PartialDownload.Library;
+using PartialDownloadManager.Library;
 
 namespace UnitTester
 {
@@ -12,14 +12,19 @@ namespace UnitTester
         {
             FileIOHelper fileIOHelper = new FileIOHelper();
 
-            string url = "C:\\Users/User/.bash_history";
-            Console.WriteLine(fileIOHelper.CheckFileSize(url));//exist
+            string path = "d:\\.testfile";
+            int afile = fileIOHelper.CheckFileSize(path);
+            Console.WriteLine(afile);//not exist
+            Assert.AreEqual<int>(-1, afile);
 
-            url = @"C:\Users\User\.bash_history";
-            Console.WriteLine(fileIOHelper.CheckFileSize(url));//exist
+            fileIOHelper.Touch(path);
+            afile = fileIOHelper.CheckFileSize(path);
+            Console.WriteLine();//exist
+            Assert.AreEqual<int>(0, afile);
+            fileIOHelper.Remove(path);
 
-            url = @"c:\123.546";
-            int nonExistFile = fileIOHelper.CheckFileSize(url);
+            path = @"d:\123.546";
+            int nonExistFile = fileIOHelper.CheckFileSize(path);
             Console.WriteLine(nonExistFile);//File not exist
             Assert.AreEqual<int>(-1, nonExistFile);
         }

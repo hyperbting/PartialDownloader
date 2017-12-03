@@ -1,4 +1,4 @@
-﻿using PartialDownload.Library;
+﻿using PartialDownloadManager.Library;
 
 using System;
 using System.Collections;
@@ -7,13 +7,13 @@ using System.Net;
 
 using UnityEngine.Networking;
 
-namespace PartialDownload.LibraryUnity
+namespace PartialDownloadManager.LibraryUnity
 {
     public class UnityWebRequestHelper
     {
         private bool atWork = false;
 
-        public SSLSupporter ssls = new SSLSupporter();
+        //public SSLSupporter ssls = new SSLSupporter();
 
         /// <summary>
         /// UnityWebRequest Version of get header
@@ -50,11 +50,10 @@ namespace PartialDownload.LibraryUnity
         /// <returns></returns>
         public IEnumerator DownloadParts(Action<Stream> _resultStreamAct, string _url, int _start, int _windowSize = 1048576)
         {
-            ServicePointManager.ServerCertificateValidationCallback = ssls.MyRemoteCertificateValidationCallback;
+            //ServicePointManager.ServerCertificateValidationCallback = ssls.MyRemoteCertificateValidationCallback;
 
             HttpWebRequest myHttpWebRequest = (HttpWebRequest)WebRequest.Create(_url);
             myHttpWebRequest.AddRange(_start, _start + _windowSize - 1);
-            yield return null;
 
             bool locked = true;
             myHttpWebRequest.BeginGetResponse(
@@ -72,7 +71,27 @@ namespace PartialDownload.LibraryUnity
             }
         }
 
-        #region Utility
+        public IEnumerator Download(string _url, Action _successAct, Action<float> _pregressAct = null)
+        {
+            using (UnityWebRequest request = UnityWebRequest.Get(_url))
+            {
+                while (!request.isDone)
+                {
+                    if (_pregressAct != null)
+                        _pregressAct(request.downloadProgress);
+                    yield return null;
+                }
+
+                if (request.isNetworkError || request.isHttpError) // Error
+                {
+                    yield break;
+                }
+
+                //success
+            }
+        }
+
+            #region Utility
         public IEnumerator CheckInternetConnection(Action<bool> _act, string _url)
         {
             if (atWork)

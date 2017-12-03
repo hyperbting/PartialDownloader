@@ -56,9 +56,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PartialDownload\PartialDownload.csproj">
+    <ProjectReference Include="..\PartialDownload\PartialDownloadManager.csproj">
       <Project>{912DB248-FDC1-45BB-B38A-14A74DA265CB}</Project>
-      <Name>PartialDownload</Name>
+      <Name>PartialDownloadManager</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
