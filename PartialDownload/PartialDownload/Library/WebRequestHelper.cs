@@ -87,7 +87,6 @@ namespace PartialDownloader.Library
 
                 if (Int32.TryParse(resp.Headers.Get("Content-Length"), out ContentLength))
                 {
-                    //Do something useful with ContentLength here 
                     return ContentLength;
                 }
             }
@@ -112,6 +111,38 @@ namespace PartialDownloader.Library
             }
             return -1;
         }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="_resultStreamAct"></param>
+        ///// <param name="_url"></param>
+        ///// <param name="_start"></param>
+        ///// <param name="_windowSize">1048576 = 1MB</param>
+        ///// <returns></returns>
+        //public IEnumerator DownloadParts(Action<Stream> _resultStreamAct, string _url, int _start, int _windowSize = 1048576)
+        //{
+        //    //ServicePointManager.ServerCertificateValidationCallback = ssls.MyRemoteCertificateValidationCallback;
+
+        //    HttpWebRequest myHttpWebRequest = (HttpWebRequest)WebRequest.Create(_url);
+        //    myHttpWebRequest.AddRange(_start, _start + _windowSize - 1);
+
+        //    bool locked = true;
+        //    myHttpWebRequest.BeginGetResponse(
+        //        new AsyncCallback(
+        //            (IAsyncResult result) =>
+        //            {
+        //                HttpWebResponse response = (result.AsyncState as HttpWebRequest).EndGetResponse(result) as HttpWebResponse;
+        //                _resultStreamAct(response.GetResponseStream());
+        //                locked = false;
+        //            }
+        //        ), myHttpWebRequest);
+
+        //    while (locked)
+        //    {
+        //        yield return null;
+        //    }
+        //}
 
         [System.Obsolete("Non-Async will hurt performance, use Async instead")]
         public Stream DownloadParts(string _url, int _start, int _windowSize = 1024)

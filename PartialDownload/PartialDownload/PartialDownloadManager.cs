@@ -25,6 +25,7 @@ namespace PartialDownloader
         public DownloadProcess localSmaller = DownloadProcess.Resume;
 
         [Header("Debug Info")]
+        public bool debugMode = false;
         [SerializeField]
         private int downloaderCounter = 0;
 
@@ -51,12 +52,14 @@ namespace PartialDownloader
 
         protected void OnEnable()
         {
-            myProgressDelegate += DefaultProgressDelegate;
+            if(debugMode)
+                myProgressDelegate += DefaultProgressDelegate;
         }
 
         protected void OnDisable()
         {
-            myProgressDelegate -= DefaultProgressDelegate;
+            if (debugMode)
+                myProgressDelegate -= DefaultProgressDelegate;
         }
 
 
@@ -70,7 +73,6 @@ namespace PartialDownloader
         {
             myFileIOHelper = new FileIOHelper();
             myUnityWebRequestHelper = new UnityWebRequestHelper();
-            //ssls = new SSLSupporter();
 
             //first check networking as soon as possibile
             if (checkAtStart)
@@ -97,10 +99,12 @@ namespace PartialDownloader
                 yield return null;
 
             //check remote server support
-            if(!supportPartialDL)//if (WebRequestHelper.CheckServerSupportPartialContent(_url))
+            if(!supportPartialDL)
             {
                 //not support partial download
-                Debug.Log("Remote Server Not Support Partial Download");
+                if (debugMode)
+                    Debug.Log("Remote Server Not Support Partial Download");
+
                 _resultAct( DownloadProcess.RedownloadFromBeginning, localFileSize, remoteFileSize);
                 yield break;
             }
@@ -112,7 +116,8 @@ namespace PartialDownloader
         {
             if (remoteFileSize <= 0)//remote file not exist
             {
-                Debug.Log("Remote File Not Found");
+                if (debugMode)
+                    Debug.Log("Remote File Not Found");
                 return DownloadProcess.DoNothing; 
             }
 
@@ -131,7 +136,8 @@ namespace PartialDownloader
             }
             else//file size Matched?! job done here
             {
-                Debug.Log("File Size Matched");
+                if (debugMode)
+                    Debug.Log("File Size Matched");
                 return DownloadProcess.DoNothing;
             }
         }
@@ -165,7 +171,8 @@ namespace PartialDownloader
             while (pd == DownloadProcess.BeforeProcess)
                 yield return null;
 
-            Debug.LogFormat("remote file size {0}; local file size {1}; Next Process will be {2}", rfsize, lfsize, pd);
+            if (debugMode)
+                Debug.LogFormat("remote file size {0}; local file size {1}; Next Process will be {2}", rfsize, lfsize, pd);
             switch (pd)
             {
                 case DownloadProcess.RedownloadFromBeginning:

@@ -16,7 +16,7 @@ namespace PartialDownloader
         /// <param name="_url"></param>
         /// <param name="_resultAct"></param>
         /// <returns></returns>
-        public IEnumerator CheckFileSize(string _url, Action<int,bool> _resultAct)
+        public IEnumerator CheckFileSize(string _url, Action<int, bool> _resultAct)
         {
             using (UnityWebRequest www = UnityWebRequest.Head(_url))
             {
@@ -24,12 +24,11 @@ namespace PartialDownloader
 
                 if (www.isNetworkError || www.isHttpError)
                 {
-                    _resultAct(-1,false);
+                    _resultAct(-(int)www.responseCode, false);
                 }
                 else
                 {
                     string result = www.GetResponseHeader("Content-Length");
-                    //string ContentRanges = www.GetResponseHeader("Accept-Ranges");
                     _resultAct(int.Parse(result), www.GetResponseHeaders().ContainsKey("Accept-Ranges"));
                 }
             }
@@ -86,37 +85,6 @@ namespace PartialDownloader
             }
         }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="_resultStreamAct"></param>
-        ///// <param name="_url"></param>
-        ///// <param name="_start"></param>
-        ///// <param name="_windowSize">1048576 = 1MB</param>
-        ///// <returns></returns>
-        //public IEnumerator DownloadParts(Action<Stream> _resultStreamAct, string _url, int _start, int _windowSize = 1048576)
-        //{
-        //    //ServicePointManager.ServerCertificateValidationCallback = ssls.MyRemoteCertificateValidationCallback;
-
-        //    HttpWebRequest myHttpWebRequest = (HttpWebRequest)WebRequest.Create(_url);
-        //    myHttpWebRequest.AddRange(_start, _start + _windowSize - 1);
-
-        //    bool locked = true;
-        //    myHttpWebRequest.BeginGetResponse(
-        //        new AsyncCallback(
-        //            (IAsyncResult result) => {
-        //                HttpWebResponse response = (result.AsyncState as HttpWebRequest).EndGetResponse(result) as HttpWebResponse;
-        //                _resultStreamAct( response.GetResponseStream() );
-        //                locked = false;
-        //            }
-        //        ), myHttpWebRequest);
-
-        //    while (locked)
-        //    {
-        //        yield return null;
-        //    }
-        //}
-
         public IEnumerator Download(string _url, Action<byte[]> _successAct, Action<float> _pregressAct = null, Action<string> _errorAct = null)
         {
             using (UnityWebRequest request = UnityWebRequest.Get(_url))
@@ -143,7 +111,7 @@ namespace PartialDownloader
         public IEnumerator CheckInternetConnection(Action<bool> _act, string _url)
         {
             if (atWork)
-                yield return null;
+                yield break;
 
             atWork = true;
             using (UnityWebRequest www = UnityWebRequest.Get(_url))

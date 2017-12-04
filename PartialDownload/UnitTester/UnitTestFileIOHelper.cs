@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using PartialDownloadManager.Library;
+
+using PartialDownloader;
 
 namespace UnitTester
 {
