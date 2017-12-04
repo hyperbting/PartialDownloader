@@ -1,14 +1,10 @@
-﻿using PartialDownloadManager.Library;
-using PartialDownloadManager.LibraryUnity;
-
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 
 using UnityEngine;
 
-namespace PartialDownloadManager
+namespace PartialDownloader
 {
     public class PartialDownloadManager: MonoBehaviour
     {
@@ -33,10 +29,12 @@ namespace PartialDownloadManager
         private int downloaderCounter = 0;
 
         private UnityWebRequestHelper myUnityWebRequestHelper;
-        private WebRequestHelper myWebRequestHelper;
         private FileIOHelper myFileIOHelper;
-        //private SSLSupporter ssls;
 
+        #region Delegate
+        public delegate void FloatDelegate(float _fl);
+        #endregion
+        public FloatDelegate myProgressDelegate;
         public static PartialDownloadManager instance;
 
         public static void Initialize()
@@ -51,6 +49,17 @@ namespace PartialDownloadManager
             }
         }
 
+        protected void OnEnable()
+        {
+            myProgressDelegate += DefaultProgressDelegate;
+        }
+
+        protected void OnDisable()
+        {
+            myProgressDelegate -= DefaultProgressDelegate;
+        }
+
+
         protected void Awake()
         {
             if (instance == null)
@@ -59,7 +68,6 @@ namespace PartialDownloadManager
 
         protected void Start()
         {
-            myWebRequestHelper = new WebRequestHelper();
             myFileIOHelper = new FileIOHelper();
             myUnityWebRequestHelper = new UnityWebRequestHelper();
             //ssls = new SSLSupporter();
@@ -69,20 +77,35 @@ namespace PartialDownloadManager
                 CheckInternetConnection(true);
         }
 
-        public DownloadProcess DownloadBehaviourCheck(string _url, string _localPath, ref int _localFileSize, ref int _remoteFileSize)
+        public IEnumerator DownloadBehaviourCheck(string _url, string _localPath, Action<DownloadProcess,int,int> _resultAct)
         {
-            _remoteFileSize = myWebRequestHelper.CheckFileSize(_url);
-            _localFileSize = myFileIOHelper.CheckFileSize(_localPath);
+            int localFileSize = myFileIOHelper.CheckFileSize(_localPath);
+
+            bool processed = false;
+            bool supportPartialDL = false;
+            int remoteFileSize = -1;
+            StartCoroutine(myUnityWebRequestHelper.CheckFileSize(_url, 
+                (int _val, bool _supportPartialDL) => 
+                {
+                    remoteFileSize = _val;
+                    supportPartialDL = _supportPartialDL;
+                    processed = true;
+                }
+                ));
+
+            while (!processed)
+                yield return null;
 
             //check remote server support
-            if (WebRequestHelper.CheckServerSupportPartialContent(_url))
+            if(!supportPartialDL)//if (WebRequestHelper.CheckServerSupportPartialContent(_url))
             {
                 //not support partial download
                 Debug.Log("Remote Server Not Support Partial Download");
-                return DownloadProcess.RedownloadFromBeginning;
+                _resultAct( DownloadProcess.RedownloadFromBeginning, localFileSize, remoteFileSize);
+                yield break;
             }
 
-            return DownloadBehaviourCheck(_localFileSize, _remoteFileSize);
+            _resultAct(DownloadBehaviourCheck(localFileSize, remoteFileSize), localFileSize, remoteFileSize);
         }
 
         protected DownloadProcess DownloadBehaviourCheck(int localFileSize, int remoteFileSize)
@@ -117,7 +140,6 @@ namespace PartialDownloadManager
         {
             StartCoroutine(
                 DownloadWholeFile(
-                    (Stream _st) => { myFileIOHelper.AppendTo(_localPath, _st, _windowSize); },
                     _remoteURL,
                     _localPath,
                     _windowSize
@@ -125,14 +147,25 @@ namespace PartialDownloadManager
             );
         }
 
-        protected IEnumerator DownloadWholeFile(Action<Stream> _resultStreamAct, string _remoteURL, string _localPath, int _windowSize)
+        protected IEnumerator DownloadWholeFile(string _remoteURL, string _localPath, int _windowSize)
         {
-            int rfsize = -1; //myWebRequestHelper.CheckFileSize(_remoteURL);
-            int lfsize = -1; //myFileIOHelper.CheckFileSize(_localPath);
+            int rfsize = -1;
+            int lfsize = -1;
 
-            DownloadProcess pd = DownloadBehaviourCheck(_remoteURL, _localPath, ref lfsize, ref rfsize);
+            DownloadProcess pd = DownloadProcess.BeforeProcess;
+            StartCoroutine(DownloadBehaviourCheck(_remoteURL, _localPath, 
+                (DownloadProcess _dp, int _local, int _remote) =>
+                {
+                    pd = _dp;
+                    rfsize = _remote;
+                    lfsize = _local;
+                }
+                ));
 
-            Debug.LogFormat("remote file size {0}; local file size {1}; Next Process {2}", rfsize, lfsize, pd);
+            while (pd == DownloadProcess.BeforeProcess)
+                yield return null;
+
+            Debug.LogFormat("remote file size {0}; local file size {1}; Next Process will be {2}", rfsize, lfsize, pd);
             switch (pd)
             {
                 case DownloadProcess.RedownloadFromBeginning:
@@ -152,35 +185,36 @@ namespace PartialDownloadManager
 
             downloaderCounter++;
             bool locker;
-
             for (int i = lfsize + 1; i < rfsize; i += _windowSize)
             {
                 locker = true;
-                Coroutine cr = StartCoroutine(
+                StartCoroutine(
                     myUnityWebRequestHelper.DownloadParts(
-                        (Stream _st) => {
-                            myFileIOHelper.AppendTo(_localPath, _st);
+                        (byte[] _bytes) => {
+                            myFileIOHelper.AppendTo(_localPath, _bytes);
                             locker = false;
-                            Debug.Log(i + " finished");
+                            //Debug.Log(i + " finished");
+                            myProgressDelegate((float)i / (float)rfsize);
                         }, _remoteURL, i, _windowSize)
                 );
 
-                while(locker)
+                while (locker)
                     yield return null;//wait for this chunk downloaded
             }
+            myProgressDelegate(1);
             downloaderCounter--;
         }
 
         #region Utility
         public bool CheckInternetConnection(bool _forceRecheck = false)
         {
-            void DefaultInternetWorking(bool _hasConnection)
-            {
-                hasInternetConnection = (_hasConnection) ? InternetConnectionSyayue.Okay : InternetConnectionSyayue.Blocked;
-            }
-
             if ( _forceRecheck  || hasInternetConnection == InternetConnectionSyayue.UnKnOwN)
-                StartCoroutine(CheckInternetConnection(checkerAddress, DefaultInternetWorking));
+                StartCoroutine(CheckInternetConnection(checkerAddress,
+                    (bool _hasConnection) =>
+                    {
+                        hasInternetConnection = (_hasConnection) ? InternetConnectionSyayue.Okay : InternetConnectionSyayue.Blocked;
+                    }
+                ));
 
             if (hasInternetConnection == InternetConnectionSyayue.Okay)
                 return true;
@@ -191,20 +225,18 @@ namespace PartialDownloadManager
         {
             bool successConnect = false;
             bool atWork = false;
-
-            void DefaultCheckInternetConnection(bool _canConnect)
-            {
-                atWork = false;
-                if (_canConnect)
-                    successConnect = true;
-            }
             
             foreach (var url in checkerAddress)
             {
                 atWork = true;
                 StartCoroutine(
                     myUnityWebRequestHelper.CheckInternetConnection(
-                        DefaultCheckInternetConnection, 
+                        (bool _canConnect) =>
+                        {
+                            atWork = false;
+                            if (_canConnect)
+                                successConnect = true;
+                        }, 
                         url));
 
                 while (atWork)
@@ -219,10 +251,18 @@ namespace PartialDownloadManager
             _successAct(false);
         }
         #endregion
+
+        #region Default Delegate Action
+        void DefaultProgressDelegate(float _val)
+        {
+            Debug.Log(_val);
+        }
+        #endregion
     }
 
     public enum DownloadProcess
     {
+        BeforeProcess,
         DoNothing,
         RedownloadFromBeginning,
         Resume

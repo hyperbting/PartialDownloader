@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 using System.IO;
 
-namespace PartialDownloadManager.Library
+namespace PartialDownloader
 {
     public class FileIOHelper
     {
