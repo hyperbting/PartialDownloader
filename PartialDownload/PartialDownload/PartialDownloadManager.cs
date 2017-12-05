@@ -52,16 +52,13 @@ namespace PartialDownloader
 
         protected void OnEnable()
         {
-            if(debugMode)
-                myProgressDelegate += DefaultProgressDelegate;
+            myProgressDelegate += DefaultProgressDelegate;
         }
 
         protected void OnDisable()
         {
-            if (debugMode)
-                myProgressDelegate -= DefaultProgressDelegate;
+            myProgressDelegate -= DefaultProgressDelegate;
         }
-
 
         protected void Awake()
         {
@@ -74,7 +71,7 @@ namespace PartialDownloader
             myFileIOHelper = new FileIOHelper();
             myUnityWebRequestHelper = new UnityWebRequestHelper();
 
-            //first check networking as soon as possibile
+            //first check network connection as soon as possibile
             if (checkAtStart)
                 CheckInternetConnection(true);
         }
@@ -128,10 +125,14 @@ namespace PartialDownloader
 
             if (localFileSize < remoteFileSize)
             {
+                if (debugMode)
+                    Debug.Log("Local < Remote");
                 return localSmaller;
             }
             else if (localFileSize > remoteFileSize)//file must changed
             {
+                if (debugMode)
+                    Debug.Log("Local > Remote");
                 return localLarger;
             }
             else//file size Matched?! job done here
@@ -173,6 +174,7 @@ namespace PartialDownloader
 
             if (debugMode)
                 Debug.LogFormat("remote file size {0}; local file size {1}; Next Process will be {2}", rfsize, lfsize, pd);
+
             switch (pd)
             {
                 case DownloadProcess.RedownloadFromBeginning:
@@ -200,7 +202,6 @@ namespace PartialDownloader
                         (byte[] _bytes) => {
                             myFileIOHelper.AppendTo(_localPath, _bytes);
                             locker = false;
-                            //Debug.Log(i + " finished");
                             myProgressDelegate((float)i / (float)rfsize);
                         }, _remoteURL, i, _windowSize)
                 );
@@ -262,7 +263,8 @@ namespace PartialDownloader
         #region Default Delegate Action
         void DefaultProgressDelegate(float _val)
         {
-            Debug.Log(_val);
+            if (debugMode)
+                Debug.Log(_val);
         }
         #endregion
     }
